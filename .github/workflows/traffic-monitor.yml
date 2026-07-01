@@ -1,0 +1,21 @@
+name: Traffic Monitor
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  track:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        repo: [reasonix-portakit, reasonix-migration-assistant, knowledge-cleanup, llm-wiki-pipeline]
+    steps:
+      - name: Collect traffic data
+        run: |
+          VIEWS=$(curl -s "https://api.github.com/repos/CS-Faith/${{ matrix.repo }}/traffic/views" | jq '.count // 0')
+          CLONES=$(curl -s "https://api.github.com/repos/CS-Faith/${{ matrix.repo }}/traffic/clones" | jq '.count // 0')
+          STARS=$(curl -s "https://api.github.com/repos/CS-Faith/${{ matrix.repo }}" | jq '.stargazers_count // 0')
+          DATE=$(date -u +%Y-%m-%d)
+          echo "$DATE,${{ matrix.repo }},$VIEWS,$CLONES,$STARS" >> traffic-log.csv
+          echo "Date: $DATE | Repo: ${{ matrix.repo }} | Views: $VIEWS | Clones: $CLONES | Stars: $STARS"
